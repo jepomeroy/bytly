@@ -18,7 +18,7 @@ type Bytly struct {
 }
 
 func Setup() {
-	dsn := "host=localhost user=admin password=test dbname=admin port=5432 sslmode=disable"
+	dsn := "host=localhost user=postgres password=password dbname=bytly port=5432 sslmode=disable"
 	var err error
 
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})

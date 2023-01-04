@@ -3,7 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -20,7 +20,7 @@ type errMessage struct {
 }
 
 func createBytly(c echo.Context) error {
-	body, err := ioutil.ReadAll(c.Request().Body)
+	body, err := io.ReadAll(c.Request().Body)
 
 	if err != nil {
 		msg := errMessage{}
@@ -110,7 +110,7 @@ func redirectBytly(c echo.Context) error {
 }
 
 func updateBytly(c echo.Context) error {
-	body, err := ioutil.ReadAll(c.Request().Body)
+	body, err := io.ReadAll(c.Request().Body)
 
 	if err != nil {
 		msg := errMessage{}
