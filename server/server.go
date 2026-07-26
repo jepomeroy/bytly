@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -21,11 +22,10 @@ type errMessage struct {
 
 func createBytly(c echo.Context) error {
 	body, err := io.ReadAll(c.Request().Body)
-
 	if err != nil {
 		msg := errMessage{}
 		msg.Message = "error parsing a bytly"
-		msg.Error = fmt.Sprint("{}", err)
+		msg.Error = fmt.Sprint(err)
 		return c.JSON(http.StatusBadRequest, msg)
 	}
 
@@ -34,7 +34,7 @@ func createBytly(c echo.Context) error {
 	if err := json.Unmarshal(body, &b); err != nil {
 		msg := errMessage{}
 		msg.Message = "error parsing a bytly"
-		msg.Error = fmt.Sprint("{}", err)
+		msg.Error = fmt.Sprint(err)
 		return c.JSON(http.StatusBadRequest, msg)
 	}
 
@@ -44,12 +44,11 @@ func createBytly(c echo.Context) error {
 	b.Clicked = 0
 
 	bytly, err := model.CreateBytly(b)
-
 	if err != nil {
 		msg := errMessage{}
 
 		msg.Message = "error creating a bytly"
-		msg.Error = fmt.Sprint("{}", err)
+		msg.Error = fmt.Sprint(err)
 		return c.JSON(http.StatusBadRequest, msg)
 	}
 
@@ -58,12 +57,11 @@ func createBytly(c echo.Context) error {
 
 func getBytlies(c echo.Context) error {
 	bytlies, err := model.GetAllBytlies()
-
 	if err != nil {
 		msg := errMessage{}
 
 		msg.Message = "error retrieving all bytlies"
-		msg.Error = fmt.Sprint("{}", err)
+		msg.Error = fmt.Sprint(err)
 		return c.JSON(http.StatusInternalServerError, msg)
 	}
 
@@ -78,13 +76,12 @@ func deleteBytly(c echo.Context) error {
 
 func getBytly(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
-	bytly, err := model.GetBytlyById(uint64(id))
-
+	bytly, err := model.GetBytlyByID(uint64(id))
 	if err != nil {
 		msg := errMessage{}
 
 		msg.Message = "error retrieving bytly"
-		msg.Error = fmt.Sprint("{}", err)
+		msg.Error = fmt.Sprint(err)
 		return c.JSON(http.StatusInternalServerError, msg)
 	}
 
@@ -94,12 +91,11 @@ func getBytly(c echo.Context) error {
 func redirectBytly(c echo.Context) error {
 	shortcut := c.Param("bytly")
 	bytly, err := model.GetBytlyByShortcut(shortcut)
-
 	if err != nil {
 		msg := errMessage{}
 
 		msg.Message = "error retrieving bytly"
-		msg.Error = fmt.Sprint("{}", err)
+		msg.Error = fmt.Sprint(err)
 		return c.JSON(http.StatusInternalServerError, msg)
 	}
 
@@ -111,11 +107,10 @@ func redirectBytly(c echo.Context) error {
 
 func updateBytly(c echo.Context) error {
 	body, err := io.ReadAll(c.Request().Body)
-
 	if err != nil {
 		msg := errMessage{}
 		msg.Message = "error parsing a bytly"
-		msg.Error = fmt.Sprint("{}", err)
+		msg.Error = fmt.Sprint(err)
 		return c.JSON(http.StatusBadRequest, msg)
 	}
 
@@ -124,17 +119,16 @@ func updateBytly(c echo.Context) error {
 	if err := json.Unmarshal(body, &b); err != nil {
 		msg := errMessage{}
 		msg.Message = "error parsing a bytly"
-		msg.Error = fmt.Sprint("{}", err)
+		msg.Error = fmt.Sprint(err)
 		return c.JSON(http.StatusBadRequest, msg)
 	}
 
 	bytly, err := model.UpdateBytly(b)
-
 	if err != nil {
 		msg := errMessage{}
 
 		msg.Message = "error creating a bytly"
-		msg.Error = fmt.Sprint("{}", err)
+		msg.Error = fmt.Sprint(err)
 		return c.JSON(http.StatusBadRequest, msg)
 	}
 
@@ -156,5 +150,5 @@ func Setup() {
 	e.PATCH("/bytly", updateBytly)
 	e.POST("/bytly", createBytly)
 
-	e.Logger.Fatal(e.Start(":5000"))
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", os.Getenv("API_PORT"))))
 }

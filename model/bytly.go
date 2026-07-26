@@ -12,7 +12,7 @@ func GetAllBytlies() ([]Bytly, error) {
 	return bytlies, nil
 }
 
-func GetBytlyById(id uint64) (Bytly, error) {
+func GetBytlyByID(id uint64) (Bytly, error) {
 	var bytly Bytly
 
 	result := db.Where("id = ?", id).First(&bytly)
