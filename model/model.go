@@ -1,14 +1,20 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
+// invalidCatalogName is the Postgres SQLSTATE code returned when the target
+// database does not exist yet (e.g. on first run against a fresh server).
+const invalidCatalogName = "3D000"
 
 var db *gorm.DB
 
@@ -36,12 +42,15 @@ func init() {
 
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		if gorm.ErrRecordNotFound == err {
-			// Create the database if it doesn't exist
-			createDBSQL := fmt.Sprintf("CREATE DATABASE %s", dbName)
-			err = db.Exec(createDBSQL).Error
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == invalidCatalogName {
+			if createErr := createDatabase(dbHost, dbUser, dbPassword, dbPort, dbName); createErr != nil {
+				log.Fatalf("Failed to create database %q: %v\n", dbName, createErr)
+			}
+
+			db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 			if err != nil {
-				log.Fatal("Failed to create database:", err)
+				log.Fatalf("Error connecting to the database after creating it: %v\n", err)
 			}
 		} else {
 			log.Fatalf("Error connecting to the database: %v\n", err)
@@ -52,10 +61,24 @@ func init() {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
 
-	// Close the initial connection and reconnect to the newly created database
-	_, err = db.DB()
+// createDatabase connects to the default "postgres" maintenance database and
+// issues a CREATE DATABASE for dbName, since Postgres has no "CREATE IF NOT
+// EXISTS" support and dbName can't exist yet for us to connect to directly.
+func createDatabase(host, user, password, port, dbName string) error {
+	maintenanceDSN := fmt.Sprintf("host=%s user=%s password=%s port=%s dbname=postgres sslmode=disable", host, user, password, port)
+
+	maintenanceDB, err := gorm.Open(postgres.Open(maintenanceDSN), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Failed to get database connection:", err)
+		return err
 	}
+
+	sqlDB, err := maintenanceDB.DB()
+	if err != nil {
+		return err
+	}
+	defer sqlDB.Close()
+
+	return maintenanceDB.Exec(fmt.Sprintf(`CREATE DATABASE "%s"`, dbName)).Error
 }
