@@ -11,8 +11,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	"bytly/model"
-	"bytly/utils"
+	"bytly/internal/model"
+	"bytly/internal/utils"
 )
 
 type errMessage struct {

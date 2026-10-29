@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytly/server"
+	"bytly/internal/server"
 )
 
 func main() {
